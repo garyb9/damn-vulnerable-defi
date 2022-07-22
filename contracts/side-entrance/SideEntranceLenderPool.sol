@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 interface IFlashLoanEtherReceiver {
@@ -31,7 +32,6 @@ contract SideEntranceLenderPool {
         require(balanceBefore >= amount, "Not enough ETH in balance");
         
         IFlashLoanEtherReceiver(msg.sender).execute{value: amount}();
-
         require(address(this).balance >= balanceBefore, "Flash loan hasn't been paid back");        
     }
 }
