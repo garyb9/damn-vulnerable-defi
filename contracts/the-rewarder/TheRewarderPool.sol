@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
 import "./RewardToken.sol";
 import "../DamnValuableToken.sol";
 import "./AccountingToken.sol";

