@@ -82,15 +82,12 @@ describe('[Challenge] The rewarder', function () {
             this.rewardToken.address
         );    
 
-        let ZERO = ethers.utils.parseEther('0');
-        // let txn = await attackContract.executeFlashloan(ZERO);
         let txn = await attackContract.executeFlashloan(TOKENS_IN_LENDER_POOL);
 
-        // console.log(
-        //     parseInt(txn.gasLimit._hex, 16)
-        // )
-
-        // await this.rewarderPool.connect(attacker).distributeRewards();
+        console.log(
+            "Attack gas cost:",
+            parseInt(txn.gasLimit._hex, 16)
+        )
     });
 
     after(async function () {
